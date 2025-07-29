@@ -17,12 +17,10 @@ print("Camera stream started...")
 stream_url = f"http://192.168.1.{yanip}:8000/stream.mjpg" 
 cap = cv2.VideoCapture(stream_url)
 
-#the event loop creation
-#loop = asyncio.get_event_loop()
-#change_scene_task = loop.create_task()
-
 model = torch.hub.load('ultralytics/yolov5', 'yolov5s', pretrained=True)
-while cap.isOpened():
+saw_person = False
+while cap.isOpened(): 
+    saw_person_changed = False
     ret, frame = cap.read()
     if not ret:
         print("Failed to get frame")
@@ -33,24 +31,33 @@ while cap.isOpened():
     annotated_frame = results.ims[0]
     cv2.imshow("Yanshee Object Detection", annotated_frame)
    #say objects names outloud
+
     names = results.pandas().xyxy[0]
     kotsy = names['name'].tolist()
-    #for i in kotsy:
-    #print(i)
-    #YanAPI.sync_do_tts(kotsy)
+    for i in kotsy:
+        YanAPI.sync_do_tts(i)
 
     if "person" in kotsy:
-        vis_task_res = YanAPI.get_visual_task_result("face", "recognition")
-        if vis_task_res["data"]["recognition"]["name"] == "none":
-            YanAPI.set_robot_led("camera", "red", "on")
-            YanAPI.set_robot_led("button", "red", "on")
-        else: 
-            YanAPI.set_robot_led("camera", "green", "on")
-            YanAPI.set_robot_led("button", "green", "on")
-            YanAPI.start_play_motion("bow")
-    else:
-            YanAPI.set_robot_led("camera", "blue", "on")
-            YanAPI.set_robot_led("button", "blue", "on")
+        saw_person_changed = not saw_person
+        saw_person = True 
+    else: 
+        saw_person_changed = saw_person
+        saw_person = False
+
+    if saw_person_changed:
+        if saw_person: 
+            vis_task_res = YanAPI.get_visual_task_result("face", "recognition")
+            if vis_task_res["data"]["recognition"]["name"] == "none":
+                YanAPI.set_robot_led("camera", "red", "on")
+                YanAPI.set_robot_led("button", "red", "on")
+            else: 
+                YanAPI.set_robot_led("camera", "green", "on")
+                YanAPI.set_robot_led("button", "green", "on")
+                YanAPI.start_play_motion("bow")
+        else:
+                YanAPI.set_robot_led("camera", "blue", "on")
+                YanAPI.set_robot_led("button", "blue", "on")
+
     if cv2.waitKey(1) & 0xFF == ord("q"):
         break
     #time.sleep(0.1)
