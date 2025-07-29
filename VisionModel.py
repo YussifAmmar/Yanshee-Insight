@@ -22,7 +22,6 @@ cap = cv2.VideoCapture(stream_url)
 #change_scene_task = loop.create_task()
 
 model = torch.hub.load('ultralytics/yolov5', 'yolov5s', pretrained=True)
-saw_person = False
 while cap.isOpened():
     ret, frame = cap.read()
     if not ret:
@@ -38,11 +37,9 @@ while cap.isOpened():
     kotsy = names['name'].tolist()
     #for i in kotsy:
     #print(i)
-    if "person" in kotsy:
-        saw_person = True 
     #YanAPI.sync_do_tts(kotsy)
 
-    if saw_person: 
+    if "person" in kotsy:
         vis_task_res = YanAPI.get_visual_task_result("face", "recognition")
         if vis_task_res["data"]["recognition"]["name"] == "none":
             YanAPI.set_robot_led("camera", "red", "on")
