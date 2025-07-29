@@ -59,7 +59,7 @@ while cap.isOpened():
         if saw_person_changed:
             print("changed")
             if saw_person: 
-                YanAPI.start_play_motion("bow")
+                #YanAPI.start_play_motion("bow")
                 vis_task_res = YanAPI.get_visual_task_result("face", "recognition")
                 if vis_task_res["data"]["recognition"]["name"] == "none":
                     YanAPI.set_robot_led("camera", "red", "on")
