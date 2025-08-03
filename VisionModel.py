@@ -1,4 +1,6 @@
 import asyncio
+from datetime import datetime
+import base64
 import time
 import torch
 import cv2
@@ -7,7 +9,7 @@ import YanAPI
 import warnings
 warnings.filterwarnings('ignore')
 
-yanip = 12
+yanip = 26
 print("starting")
 YanAPI.yan_api_init(f"192.168.1.{yanip}")
 print("intialized ip")
@@ -21,26 +23,37 @@ model = torch.hub.load('ultralytics/yolov5', 'yolov5s', pretrained=True)
 saw_person = False
 scene_changed = True
 prev_gyro = 0
+frame_count = 0
 while cap.isOpened(): 
-    if YanAPI.get_current_motion_play_state()["data"]["status"] == "idle":
-        gyro_data = YanAPI.get_sensors_gyro()
-        curr_gyro = gyro_data["data"]["gyro"][0]["gyro-x"] + gyro_data["data"]["gyro"][0]["gyro-y"] + gyro_data["data"]["gyro"][0]["gyro-z"]
-        print(prev_gyro)
-        print(curr_gyro)
-        diff = abs(prev_gyro - curr_gyro)
-        if diff > 5 and diff < 10: 
-            scene_changed = True
+    then = datetime.now()
+    frame_count+=1
+    if frame_count == 16 and YanAPI.get_current_motion_play_state()["data"]["status"] == "idle":
+       # gyro_data = YanAPI.get_sensors_gyro()
+       # curr_gyro = gyro_data["data"]["gyro"][0]["gyro-x"] + gyro_data["data"]["gyro"][0]["gyro-y"] + gyro_data["data"]["gyro"][0]["gyro-z"]
+       # diff = abs(prev_gyro - curr_gyro)
+       # if diff > 5 and diff < 10: 
+       #     scene_changed = True
+        frame_count = 0
+        now = datetime.now()
+        print((now - then).total_seconds())
         saw_person_changed = False
         ret, frame = cap.read()
         if not ret:
             print("Failed to get frame")
             break
 
+        org_frame = frame.copy()
         results = model(frame)
         results.render()
         annotated_frame = results.ims[0]
         cv2.imshow("Yanshee Object Detection", annotated_frame)
+
         if scene_changed: 
+            resized_frame = cv2.resize(org_frame, (200, round(200 / 1.3)))
+            cv2.imwrite('image.jpeg',resized_frame)
+            with open("image.jpeg", "rb") as image_file:
+                image_base64 = base64.b64encode(image_file.read())
+            print(image_base64)
             print("scene_changed")
        #say objects names outloud
 
@@ -73,9 +86,8 @@ while cap.isOpened():
 
         if cv2.waitKey(1) & 0xFF == ord("q"):
             break
-        #time.sleep(0.1)
         scene_changed = False
-        prev_gyro = curr_gyro
+        #prev_gyro = curr_gyro
 
 
 cap.release()
