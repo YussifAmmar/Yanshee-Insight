@@ -7,6 +7,7 @@ import cv2
 from ultralytics import YOLO
 import YanAPI
 import warnings
+from chat import ask_image_cap
 warnings.filterwarnings('ignore')
 
 yanip = 26
@@ -35,7 +36,6 @@ while cap.isOpened():
        #     scene_changed = True
         frame_count = 0
         now = datetime.now()
-        print((now - then).total_seconds())
         saw_person_changed = False
         ret, frame = cap.read()
         if not ret:
@@ -52,8 +52,8 @@ while cap.isOpened():
             resized_frame = cv2.resize(org_frame, (200, round(200 / 1.3)))
             cv2.imwrite('image.jpeg',resized_frame)
             with open("image.jpeg", "rb") as image_file:
-                image_base64 = base64.b64encode(image_file.read())
-            print(image_base64)
+                image_base64 = base64.b64encode(image_file.read()).decode("utf-8")
+            print(ask_image_cap(image_base64))
             print("scene_changed")
        #say objects names outloud
 

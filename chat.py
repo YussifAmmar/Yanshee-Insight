@@ -11,6 +11,25 @@ from pydantic import BaseModel
 
 client = OpenAI(api_key="")
 
+def ask_image_cap(base64_image):
+        print("Sending prompt to ChatGPT...")
+        response = client.responses.create(
+            model="gpt-4.1",
+            input=[
+                {
+                    "role": "user",
+                    "content": [
+                        { "type": "input_text", "text": "what's in this image?" },
+                        {
+                            "type": "input_image",
+                            "image_url": f"data:image/jpeg;base64,{base64_image}",
+                        },
+                    ],
+                }
+            ],
+        )     
+        chat_response = response.output_text
+        return chat_response
 def ask_chatgpt(prompt):
         print("Sending prompt to ChatGPT...")
         response = client.responses.parse(
